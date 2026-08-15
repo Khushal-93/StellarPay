@@ -19,7 +19,7 @@ export type ChallengeState =
   | '14_FREIGHTER_NOT_INSTALLED';
 
 export interface MockStateContextType {
-  // Wallet state
+  // Wallet state used only by the development state simulator.
   wallet: WalletState;
   connectWallet: () => void;
   disconnectWallet: () => void;
@@ -36,20 +36,29 @@ export interface MockStateContextType {
   txHash: string | null;
   txError: string | null;
   paymentParams: PaymentParams | null;
-  
-  // Mid-flow alert notice
+  unsignedTxXdr: string | null;
+  signedTxXdr: string | null;
+
+  // Mid-flow alert
   midFlowAlert: string | null;
   clearMidFlowAlert: () => void;
 
   // Actions
-  startReview: (recipient: string, amount: string) => void;
-  confirmTransaction: () => void;
+  startReview: (destination: string, amount: string) => void;
+
+  /**
+   * Build the transaction using the real connected wallet address.
+   * Signing/submission are intentionally handled in later phases.
+   */
+  confirmTransaction: (sourceAddress: string | null) => Promise<void>;
+
   cancelReview: () => void;
   resetPayment: () => void;
 
-  // Dev switcher action to force any of the 14 states
+  // Development state switcher
   activeChallengeState: ChallengeState;
   setChallengeState: (state: ChallengeState) => void;
 }
 
-export const MockStateContext = createContext<MockStateContextType | undefined>(undefined);
+export const MockStateContext =
+  createContext<MockStateContextType | undefined>(undefined);
