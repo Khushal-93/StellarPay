@@ -1,5 +1,6 @@
-import { useMockState } from './useMockState';
+import { usePaymentContext } from './usePaymentContext';
 import { useWallet } from './useWallet';
+
 import type {
   TransactionState,
   PaymentParams,
@@ -30,7 +31,7 @@ export function usePayment(): UsePaymentReturn {
     confirmTransaction,
     cancelReview,
     resetPayment,
-  } = useMockState();
+  } = usePaymentContext();
 
   const { address } = useWallet();
 
