@@ -1,19 +1,21 @@
 import {
-  Horizon,
-  TransactionBuilder,
+    Horizon,
+    TransactionBuilder,
 } from '@stellar/stellar-sdk';
 
 import {
-  HORIZON_URL,
-  NETWORK_PASSPHRASE,
+    HORIZON_URL,
+    NETWORK_PASSPHRASE,
 } from '../constants';
+
+import { normalizeStellarError } from './errors';
 
 const horizonServer = new Horizon.Server(HORIZON_URL);
 
 export interface SubmitPaymentTransactionResult {
-  hash: string;
-  ledger: number | null;
-  successful: boolean;
+    hash: string;
+    ledger: number | null;
+    successful: boolean;
 }
 
 /**
@@ -23,18 +25,28 @@ export interface SubmitPaymentTransactionResult {
  * before being submitted through Horizon.
  */
 export async function submitPaymentTransaction(
-  signedTxXdr: string,
+    signedTxXdr: string,
 ): Promise<SubmitPaymentTransactionResult> {
-  const transaction = TransactionBuilder.fromXDR(
-    signedTxXdr,
-    NETWORK_PASSPHRASE,
-  );
+    try {
+        const transaction = TransactionBuilder.fromXDR(
+            signedTxXdr,
+            NETWORK_PASSPHRASE,
+        );
 
-  const response = await horizonServer.submitTransaction(transaction);
+        const response = await horizonServer.submitTransaction(
+            transaction,
+        );
 
-  return {
-    hash: response.hash,
-    ledger: response.ledger ?? null,
-    successful: response.successful,
-  };
+        return {
+            hash: response.hash,
+            ledger: response.ledger ?? null,
+            successful: response.successful,
+        };
+    } catch (error) {
+        console.error('Horizon transaction submission failed:', error);
+
+        throw new Error(normalizeStellarError(error), {
+            cause: error,
+        });
+    }
 }
