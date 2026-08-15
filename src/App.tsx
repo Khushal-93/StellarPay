@@ -17,7 +17,15 @@ import { DevStateSwitcher } from './components/dev/DevStateSwitcher';
 import { ShieldCheck, Wallet, AlertTriangle, Download, Send } from 'lucide-react';
 
 function MainApp() {
-  const { connected, address, loading: walletLoading, isInstalled, connect, disconnect } = useWallet();
+  const {
+    connected,
+    address,
+    loading: walletLoading,
+    isInstalled,
+    error: walletError,
+    connect,
+    disconnect,
+  } = useWallet();
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(address);
   const { status: txStatus, txHash, error: txError, params: txParams, startPayment, confirmPayment, cancelPayment, resetPayment } = usePayment();
   const { midFlowAlert, clearMidFlowAlert } = useMockState();
@@ -131,6 +139,14 @@ function MainApp() {
                       Connect your Freighter wallet to view your XLM balance and initiate Testnet transactions securely.
                     </p>
                   </div>
+                  {walletError && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-left">
+                      <p className="text-xs font-medium text-rose-700 leading-relaxed">
+                        {walletError}
+                      </p>
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={connect}
@@ -138,7 +154,11 @@ function MainApp() {
                     className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   >
                     <Wallet className="w-4 h-4" />
-                    <span>Connect Freighter</span>
+                    <span>
+                      {walletError?.includes('Testnet')
+                        ? 'Check Testnet & Connect'
+                        : 'Connect Freighter'}
+                    </span>
                   </button>
                 </div>
               )}
