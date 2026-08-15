@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { MockStateProvider } from './context/MockStateProvider';
-import { useMockState } from './hooks/useMockState';
+import { useEffect, useState } from 'react';
+import { PaymentProvider } from './context/PaymentProvider';
 import { useWallet } from './hooks/useWallet';
 import { useBalance } from './hooks/useBalance';
 import { usePayment } from './hooks/usePayment';
@@ -12,7 +11,7 @@ import { TransactionReview } from './components/transaction/TransactionReview';
 import { TransactionStatus } from './components/transaction/TransactionStatus';
 import { TransactionSuccess } from './components/transaction/TransactionSuccess';
 import { TransactionFailure } from './components/transaction/TransactionFailure';
-import { DevStateSwitcher } from './components/dev/DevStateSwitcher';
+import { DevStateSwitcherWithProvider } from './components/dev/DevStateSwitcherWithProvider';
 
 import { ShieldCheck, Wallet, AlertTriangle, Download, Send } from 'lucide-react';
 
@@ -28,7 +27,18 @@ function MainApp() {
   } = useWallet();
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(address);
   const { status: txStatus, txHash, error: txError, params: txParams, startPayment, confirmPayment, cancelPayment, resetPayment } = usePayment();
-  const { midFlowAlert, clearMidFlowAlert } = useMockState();
+  useEffect(() => {
+    if (txStatus !== 'SUCCESS' || !txHash || !address) {
+      return;
+    }
+
+    void refetchBalance();
+  }, [txStatus, txHash, address, refetchBalance]);
+  const [midFlowAlert, setMidFlowAlert] = useState<string | null>(null);
+
+  const clearMidFlowAlert = () => {
+    setMidFlowAlert(null);
+  };
 
   const [formRecipient, setFormRecipient] = useState('');
   const [formAmount, setFormAmount] = useState('');
@@ -235,15 +245,19 @@ function MainApp() {
       </footer>
 
       {/* Dev-only State Switcher Toolbar */}
-      {import.meta.env.DEV && <DevStateSwitcher onPreFillForm={handlePreFillForm} />}
+      {import.meta.env.DEV && (
+        <DevStateSwitcherWithProvider
+          onPreFillForm={handlePreFillForm}
+        />
+      )}
     </div>
   );
 }
 
 export default function App() {
   return (
-    <MockStateProvider>
+    <PaymentProvider>
       <MainApp />
-    </MockStateProvider>
+    </PaymentProvider>
   );
 }

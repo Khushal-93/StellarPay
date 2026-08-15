@@ -6,9 +6,7 @@ import {
   MOCK_INITIAL_BALANCE,
   MOCK_TX_HASH,
 } from '../lib/constants';
-import { buildPaymentTransaction } from '../lib/stellar/transaction';
-import { signPaymentTransaction } from '../lib/stellar/signing';
-import { submitPaymentTransaction } from '../lib/stellar/submit';
+import { executePaymentTransaction } from '../lib/stellar/payment';
 import { MockStateContext, type ChallengeState } from './MockStateContext';
 
 export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -125,54 +123,36 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       setTxState('BUILDING');
 
-      const builtTransaction = await buildPaymentTransaction({
-        source: sourceAddress,
-        destination: paymentParams.destination,
-        amount: paymentParams.amount,
-      });
-
-      setUnsignedTxXdr(builtTransaction.xdr);
-
       // --------------------------------------------------
       // PHASE 6: FREIGHTER SIGNING
       // --------------------------------------------------
 
       setTxState('AWAITING_SIGNATURE');
 
-      const signedTransaction = await signPaymentTransaction({
-        xdr: builtTransaction.xdr,
-        address: sourceAddress,
+      // The actual build + sign + submit execution is now
+      // isolated inside the Stellar payment service.
+      const paymentPromise = executePaymentTransaction({
+        source: sourceAddress,
+        destination: paymentParams.destination,
+        amount: paymentParams.amount,
       });
-
-      setSignedTxXdr(signedTransaction.signedTxXdr);
 
       // --------------------------------------------------
       // PHASE 7: HORIZON SUBMISSION
       // --------------------------------------------------
 
-      setTxState('SIGNED');
-
-      // Give React a chance to record the signed state
-      // before moving into submission.
-      await Promise.resolve();
-
       setTxState('SUBMITTING');
 
-      const submission = await submitPaymentTransaction(
-        signedTransaction.signedTxXdr,
-      );
+      const result = await paymentPromise;
 
-      if (!submission.successful) {
-        throw new Error(
-          'Stellar accepted the transaction submission, but the transaction was not successful.',
-        );
-      }
+      setUnsignedTxXdr(result.unsignedTxXdr);
+      setSignedTxXdr(result.signedTxXdr);
 
       // --------------------------------------------------
       // SUCCESS
       // --------------------------------------------------
 
-      setTxHash(submission.hash);
+      setTxHash(result.hash);
       setTxState('SUCCESS');
     } catch (transactionError) {
       console.error(
