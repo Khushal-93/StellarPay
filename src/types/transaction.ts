@@ -3,6 +3,7 @@ export type TransactionState =
   | 'VALIDATING'
   | 'BUILDING'
   | 'AWAITING_SIGNATURE'
+  | 'SIGNED'
   | 'SUBMITTING'
   | 'SUCCESS'
   | 'ERROR'
@@ -18,6 +19,8 @@ export interface PaymentState {
   txHash: string | null;
   error: string | null;
   params: PaymentParams | null;
+  unsignedTxXdr: string | null;
+  signedTxXdr: string | null;
 }
 
 export interface ValidationResult {

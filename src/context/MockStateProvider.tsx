@@ -6,6 +6,9 @@ import {
   MOCK_INITIAL_BALANCE,
   MOCK_TX_HASH,
 } from '../lib/constants';
+import { buildPaymentTransaction } from '../lib/stellar/transaction';
+import { signPaymentTransaction } from '../lib/stellar/signing';
+import { submitPaymentTransaction } from '../lib/stellar/submit';
 import { MockStateContext, type ChallengeState } from './MockStateContext';
 
 export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -24,8 +27,12 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [txState, setTxState] = useState<TransactionState>('IDLE');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
-  const [paymentParams, setPaymentParams] = useState<PaymentParams | null>(null);
-
+  const [paymentParams, setPaymentParams] =
+    useState<PaymentParams | null>(null);
+  const [unsignedTxXdr, setUnsignedTxXdr] =
+    useState<string | null>(null);
+  const [signedTxXdr, setSignedTxXdr] =
+    useState<string | null>(null);
   const [midFlowAlert, setMidFlowAlert] = useState<string | null>(null);
   const [activeChallengeState, setActiveChallengeState] = useState<ChallengeState>('1_DISCONNECTED');
 
@@ -48,7 +55,7 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const disconnectWallet = () => {
-    if (['BUILDING', 'AWAITING_SIGNATURE', 'SUBMITTING'].includes(txState) || paymentParams !== null) {
+    if (['BUILDING', 'AWAITING_SIGNATURE', 'SIGNED', 'SUBMITTING'].includes(txState) || paymentParams !== null) {
       setMidFlowAlert('Wallet disconnected. Please reconnect to continue.');
     } else {
       setMidFlowAlert(null);
@@ -91,23 +98,103 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
     setTxState('BUILDING');
   };
 
-  const confirmTransaction = () => {
-    setTxState('AWAITING_SIGNATURE');
-    setTimeout(() => {
+  const confirmTransaction = async (sourceAddress: string | null) => {
+    if (!paymentParams) {
+      setTxError('Payment details are missing.');
+      setTxState('ERROR');
+      return;
+    }
+
+    if (!sourceAddress) {
+      setTxError(
+        'Wallet is not connected. Please reconnect Freighter.',
+      );
+      setTxState('ERROR');
+      return;
+    }
+
+    try {
+      setTxError(null);
+      setTxHash(null);
+      setUnsignedTxXdr(null);
+      setSignedTxXdr(null);
+
+      // --------------------------------------------------
+      // PHASE 5: BUILD
+      // --------------------------------------------------
+
+      setTxState('BUILDING');
+
+      const builtTransaction = await buildPaymentTransaction({
+        source: sourceAddress,
+        destination: paymentParams.destination,
+        amount: paymentParams.amount,
+      });
+
+      setUnsignedTxXdr(builtTransaction.xdr);
+
+      // --------------------------------------------------
+      // PHASE 6: FREIGHTER SIGNING
+      // --------------------------------------------------
+
+      setTxState('AWAITING_SIGNATURE');
+
+      const signedTransaction = await signPaymentTransaction({
+        xdr: builtTransaction.xdr,
+        address: sourceAddress,
+      });
+
+      setSignedTxXdr(signedTransaction.signedTxXdr);
+
+      // --------------------------------------------------
+      // PHASE 7: HORIZON SUBMISSION
+      // --------------------------------------------------
+
+      setTxState('SIGNED');
+
+      // Give React a chance to record the signed state
+      // before moving into submission.
+      await Promise.resolve();
+
       setTxState('SUBMITTING');
-      setTimeout(() => {
-        setTxHash(MOCK_TX_HASH);
-        setTxState('SUCCESS');
-        if (paymentParams && balance !== null) {
-          const sentAmount = parseFloat(paymentParams.amount) || 0;
-          setBalance((b) => Math.max(1.0, (b || 0) - sentAmount));
-        }
-      }, 1200);
-    }, 1200);
+
+      const submission = await submitPaymentTransaction(
+        signedTransaction.signedTxXdr,
+      );
+
+      if (!submission.successful) {
+        throw new Error(
+          'Stellar accepted the transaction submission, but the transaction was not successful.',
+        );
+      }
+
+      // --------------------------------------------------
+      // SUCCESS
+      // --------------------------------------------------
+
+      setTxHash(submission.hash);
+      setTxState('SUCCESS');
+    } catch (transactionError) {
+      console.error(
+        'Stellar transaction failed:',
+        transactionError,
+      );
+
+      setTxError(
+        transactionError instanceof Error
+          ? transactionError.message
+          : 'Unable to complete the transaction.',
+      );
+
+      setTxState('ERROR');
+    }
   };
 
   const cancelReview = () => {
     setTxState('CANCELLED');
+    setUnsignedTxXdr(null);
+    setSignedTxXdr(null);
+
     setTimeout(() => {
       setTxState('IDLE');
       setPaymentParams(null);
@@ -119,6 +206,8 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
     setPaymentParams(null);
     setTxHash(null);
     setTxError(null);
+    setUnsignedTxXdr(null);
+    setSignedTxXdr(null);
   };
 
   const clearMidFlowAlert = () => setMidFlowAlert(null);
@@ -241,6 +330,8 @@ export const MockStateProvider: React.FC<{ children: ReactNode }> = ({ children 
         txHash,
         txError,
         paymentParams,
+        unsignedTxXdr,
+        signedTxXdr,
         midFlowAlert,
         clearMidFlowAlert,
         startReview,
