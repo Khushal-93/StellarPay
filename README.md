@@ -149,27 +149,28 @@ Stellar is specifically designed for high-volume, low-cost asset transfer ecosys
 StellarPay delivers an intuitive, single-column fintech interface:
 
 1. **Wallet Connect**: Click **Connect Freighter**. The app verifies extension installation, checks network settings, and retrieves the account address.
-2. **Dashboard & Balance**: View connected wallet address (shortened, e.g., `GABC...8F31`) and live XLM available balance.
+2. **Dashboard & Balance**: View connected wallet address (shortened, e.g., `GCB6...C6KB`) and live XLM available balance (`8,967.7025 XLM`).
 3. **Payment Entry**: Input recipient Stellar public key (`G...`) and XLM transfer amount. Real-time inline validation triggers immediately.
 4. **Transaction Review**: Click **Review Payment**. A summary modal displays recipient, amount, network fee (0.00001 XLM), and total balance deduction.
-5. **Freighter Signing**: Click **Confirm & Send**. Freighter opens a pop-up window requesting signature on the transaction XDR.
+5. **Freighter Signing**: Click **Confirm with Freighter**. Freighter opens a pop-up window requesting signature on the transaction XDR.
 6. **Network Submission**: The signed transaction envelope is submitted to the Stellar Testnet via Horizon server.
 7. **Settlement Confirmation**: The app displays a green success screen with transaction hash, explorer link, and auto-refreshes wallet balance and payment history.
 
 ---
 
-## 🖼️ Product Showcase
+## 🖼️ Product Screenshots
 
-| Connected Dashboard | Transaction Review |
-| :---: | :---: |
-| *(Expected Asset: `docs/screenshots/dashboard.png`)* | *(Expected Asset: `docs/screenshots/payment-review.png`)* |
+### 1. Wallet Connected State & Live XLM Balance
+![Wallet Connected & Balance Displayed](docs/screenshots/wallet-connected-balance.png)
 
-| Payment Success & Hash | Transaction History Log |
-| :---: | :---: |
-| *(Expected Asset: `docs/screenshots/transaction-success.png`)* | *(Expected Asset: `docs/screenshots/transaction-history.png`)* |
+### 2. Payment Entry & Transaction Review Modal
+![Transaction Review](docs/screenshots/transaction-review.png)
 
-> [!TIP]
-> **Developer Note**: Capturing and placing screenshots in `docs/screenshots/` will automatically populate the visual showcase grid above.
+### 3. Freighter Signing & Submitting to Stellar Testnet
+![Freighter Signing & Horizon Submission](docs/screenshots/freighter-signing.png)
+
+### 4. Successful Testnet Transaction Result & Hash Confirmation
+![Successful Testnet Transaction Result](docs/screenshots/transaction-success-result.png)
 
 ---
 
@@ -365,7 +366,7 @@ StellarPay strictly adheres to non-custodial Web3 security standards:
 ┌────────────────────────────────────────────────────────┐
 │                  Horizon REST Server                   │
 │         (Submits signed envelope to Testnet)           │
-└────────────────────────────────────────────────────────┘
+└───────────────────────────?────────────────────────────┘
 ```
 
 * **No Key Exposure**: Private keys and seed phrases remain entirely inside the Freighter extension sandbox. StellarPay never has access to secret keys.
@@ -408,9 +409,16 @@ StellarPay strictly adheres to non-custodial Web3 security standards:
 ```
 StellarPay/
 ├── docs/                      # Architectural documentation
+│   ├── screenshots/           # Application showcase screenshots
+│   │   ├── wallet-connected-balance.png
+│   │   ├── transaction-review.png
+│   │   ├── freighter-signing.png
+│   │   └── transaction-success-result.png
 │   ├── DESIGN.md              # UI/UX design specifications
 │   ├── PRD.md                 # Product requirements document
 │   └── TECH_STACK.md          # Technical stack specification
+├── Videos and ScreenShots/    # Original demo video & media assets
+│   └── StellarPay.mp4         # Demo video recording
 ├── src/
 │   ├── components/            # React UI components
 │   │   ├── dev/               # Development mock state toolbar
@@ -478,7 +486,7 @@ To test live XLM payments on the Stellar Testnet:
 1. Open your **Freighter Extension**.
 2. Create a new wallet or import an existing test account.
 3. Open Freighter settings and switch the network to **Test Network**.
-4. Copy your Stellar Public Key address (e.g., `GABC...8F31`).
+4. Copy your Stellar Public Key address (e.g., `GCB6...C6KB`).
 
 ---
 
@@ -532,18 +540,18 @@ The repository has been validated against production standards:
 ## 🎥 Demo
 
 * **Live GitHub Repository**: [https://github.com/Khushal-93/StellarPay](https://github.com/Khushal-93/StellarPay)
-* **Video Walkthrough**: *(Video placeholder — insert 60-90 second Loom/YouTube demo link here)*
+* **Demo Video Recording**: [`Videos and ScreenShots/StellarPay.mp4`](file:///C:/Projects/StellarPay/Videos%20and%20ScreenShots/StellarPay.mp4)
 
 ---
 
 ## 🔎 Verified Testnet Transaction
 
-Below is a placeholder format for demonstrating a real verified Testnet transaction:
+Verified transaction recorded on Stellar Testnet:
 
 ```text
-Transaction Hash: [PASTE_YOUR_REAL_TESTNET_TX_HASH_HERE]
+Transaction Hash: 0bb95e2154564bf1d01111974efbbef83d1c1a9bc3cdfa6bf94e339b467c6520
 Network: Stellar Testnet
-Explorer Link: https://stellar.expert/explorer/testnet/tx/[PASTE_YOUR_REAL_TESTNET_TX_HASH_HERE]
+Explorer Verification: https://stellar.expert/explorer/testnet/tx/0bb95e2154564bf1d01111974efbbef83d1c1a9bc3cdfa6bf94e339b467c6520
 ```
 
 ---
@@ -656,9 +664,9 @@ License information will be added prior to public production release.
 | **Reserve & Input Validation** | ✅ | Enforces 1.0 XLM reserve + Ed25519 check |
 | **TypeScript & Build Check** | ✅ | Zero errors (`npx tsc -b` & `npm run build`) |
 | **Architecture Documentation** | ✅ | Detailed sequence & state machine diagrams |
-| **Real Testnet Tx Proof** | ⚠️ | *Requires developer to paste live hash* |
-| **Demo Video Link** | ⚠️ | *Requires developer to add Loom/YouTube link* |
-| **Screenshots Assets** | ⚠️ | *Requires capturing images to `docs/screenshots/`* |
+| **Real Testnet Tx Proof** | ✅ | Hash `0bb95e21...467c6520` verified on Stellar Expert |
+| **Demo Video Link** | ✅ | Demo video present in `Videos and ScreenShots/StellarPay.mp4` |
+| **Screenshots Assets** | ✅ | 4 high-res screenshots integrated in `docs/screenshots/` |
 
 ---
 
@@ -666,7 +674,6 @@ License information will be added prior to public production release.
 
 - **Verified Claims**: All features listed as completed (`✅`) have been verified against the current codebase in `src/`.
 - **Excluded Claims**: Mainnet support, smart contracts (Soroban), automated backend services, and external security audits were intentionally excluded as they are not present in the repository.
-- **Pending Submission Assets**: To finalize hackathon submission readiness, the team should capture screenshots for `docs/screenshots/`, record a 60–90 second demo video, and supply a real Testnet transaction hash.
 
 ---
 
