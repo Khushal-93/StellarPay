@@ -12,6 +12,8 @@ import { TransactionStatus } from './components/transaction/TransactionStatus';
 import { TransactionSuccess } from './components/transaction/TransactionSuccess';
 import { TransactionFailure } from './components/transaction/TransactionFailure';
 import { DevStateSwitcherWithProvider } from './components/dev/DevStateSwitcherWithProvider';
+import { useTransactionHistory } from './hooks/useTransactionHistory';
+import { TransactionHistory } from './components/transaction/TransactionHistory';
 
 import { ShieldCheck, Wallet, AlertTriangle, Download, Send } from 'lucide-react';
 
@@ -25,15 +27,45 @@ function MainApp() {
     connect,
     disconnect,
   } = useWallet();
-  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(address);
-  const { status: txStatus, txHash, error: txError, params: txParams, startPayment, confirmPayment, cancelPayment, resetPayment } = usePayment();
+
+  const {
+    transactions,
+    loading: historyLoading,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useTransactionHistory(address);
+
+  const {
+    balance,
+    loading: balanceLoading,
+    error: balanceError,
+    refetch: refetchBalance,
+  } = useBalance(address);
+
+  const {
+    status: txStatus,
+    txHash,
+    error: txError,
+    params: txParams,
+    startPayment,
+    confirmPayment,
+    cancelPayment,
+    resetPayment,
+  } = usePayment();
   useEffect(() => {
     if (txStatus !== 'SUCCESS' || !txHash || !address) {
       return;
     }
 
     void refetchBalance();
-  }, [txStatus, txHash, address, refetchBalance]);
+    void refetchHistory();
+  }, [
+    txStatus,
+    txHash,
+    address,
+    refetchBalance,
+    refetchHistory,
+  ]);
   const [midFlowAlert, setMidFlowAlert] = useState<string | null>(null);
 
   const clearMidFlowAlert = () => {
@@ -230,6 +262,16 @@ function MainApp() {
                 initialRecipient={formRecipient}
                 initialAmount={formAmount}
                 onReview={handleReview}
+              />
+            )}
+
+            {/* Transaction History */}
+            {address && (
+              <TransactionHistory
+                transactions={transactions}
+                loading={historyLoading}
+                error={historyError}
+                onRefresh={refetchHistory}
               />
             )}
           </div>
