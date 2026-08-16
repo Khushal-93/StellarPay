@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local demo recordings and screenshots
+Videos and ScreenShots/
+
+# Rust / Soroban build artifacts
+contracts/target/
