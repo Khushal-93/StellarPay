@@ -23,7 +23,7 @@ export interface ExecutePaymentTransactionResult {
  * 3. Submit signed transaction to Horizon
  *
  * This service contains blockchain execution only.
- * UI state management remains in MockStateProvider.
+ * UI transaction state is managed by PaymentProvider.
  */
 export async function executePaymentTransaction({
     source,
